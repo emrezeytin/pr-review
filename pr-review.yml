@@ -1,0 +1,44 @@
+name: PR Review
+
+on:
+  workflow_call:
+    secrets:
+      UPSTASH_BOX_API_KEY:
+        required: true
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # Double-check bot filter at workflow level too
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'renovate[bot]' &&
+      github.actor != 'github-actions[bot]'
+    timeout-minutes: 15
+    steps:
+      - name: Checkout review scripts
+        uses: actions/checkout@v4
+        with:
+          repository: YOUR_USERNAME/pr-review
+          path: .pr-review
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: .pr-review
+        run: npm ci
+
+      - name: Run review
+        working-directory: .pr-review
+        run: npm run review
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTASH_BOX_API_KEY: ${{ secrets.UPSTASH_BOX_API_KEY }}

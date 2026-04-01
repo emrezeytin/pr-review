@@ -1,0 +1,98 @@
+# PR Review
+
+Automated AI code review using [Upstash Box](https://upstash.com/docs/box/overall/quickstart) agents. Runs as a GitHub Action across all your repos via a reusable workflow.
+
+## How it works
+
+When a PR is opened or updated:
+
+1. **Skip bots** — Dependabot, Renovate, github-actions are ignored
+2. **Skip drafts** — Draft PRs are not reviewed
+3. **Filter files** — Lockfiles, images, docs, config, generated files, build output are excluded
+4. **Size-based strategy** (based on reviewable lines only):
+   - `< 5 lines` → skipped entirely
+   - `5–80 lines` → quick single-pass review (Sonnet, 2 min timeout)
+   - `80–300 lines` → thorough single-agent review (Sonnet, 5 min timeout)
+   - `300+ lines` → parallel multi-agent review: security + logic (Sonnet, 5 min each)
+5. **Post review** — Findings are posted as a GitHub PR review with severity icons
+
+## Setup
+
+### 1. Create a private repo
+
+```bash
+git clone <this-repo>
+cd pr-review
+# Replace YOUR_USERNAME in these files:
+#   .github/workflows/pr-review.yml
+#   caller-workflow.yml
+git remote set-url origin git@github.com:YOUR_USERNAME/pr-review.git
+git push -u origin main
+```
+
+### 2. Set org-level secret
+
+Go to your GitHub org Settings → Secrets and variables → Actions → New organization secret:
+
+- Name: `UPSTASH_BOX_API_KEY`
+- Value: your key from [Upstash Console](https://console.upstash.com)
+- Access: all repos (or selected repos)
+
+`GITHUB_TOKEN` is provided automatically by GitHub Actions.
+
+### 3. Add to any repo
+
+Copy `caller-workflow.yml` into the target repo as `.github/workflows/pr-review.yml`. That's it — 11 lines.
+
+```bash
+# From the target repo
+mkdir -p .github/workflows
+curl -o .github/workflows/pr-review.yml \
+  https://raw.githubusercontent.com/YOUR_USERNAME/pr-review/main/caller-workflow.yml
+```
+
+## Cost controls
+
+- **Sonnet, not Opus** — cheaper and fast enough for review
+- **Skips** bots, drafts, lockfiles, docs, images, config, generated/build output
+- **Trivial PRs** (< 5 lines) skipped entirely
+- **Small PRs** get a quick pass, not a deep dive
+- **Multi-agent** only for large PRs (300+ lines)
+- **Boxes are ephemeral** — created, used, deleted immediately with retry + safe cleanup
+- **Line counting is accurate** — only counts additions/deletions in reviewable files
+
+## Customization
+
+Edit `scripts/review-pr.ts`:
+
+- `THRESHOLDS` — adjust line count boundaries for each tier
+- `SKIP_EXTENSIONS`, `SKIP_FILES`, `SKIP_DIRECTORIES` — control what gets filtered
+- `SKIP_AUTHORS` — add more bot accounts to ignore
+- `ROLE_PROMPTS` — add/edit agent roles for multi-agent review
+- `ClaudeCode.Sonnet_4_6` — swap model (e.g. `ClaudeCode.Opus_4_6` for deeper reviews)
+
+## Local testing
+
+```bash
+export PR_URL=https://github.com/org/repo/pull/42
+export GITHUB_TOKEN=ghp_xxx
+export UPSTASH_BOX_API_KEY=abx_xxx
+
+npm install
+npm run review
+```
+
+## Project structure
+
+```
+pr-review/
+├── .github/workflows/
+│   └── pr-review.yml        # Reusable workflow (lives in this repo)
+├── scripts/
+│   └── review-pr.ts         # Review logic
+├── caller-workflow.yml       # Copy this into target repos
+├── package.json
+├── tsconfig.json
+├── .env.example
+└── .gitignore
+```

@@ -1,0 +1,12 @@
+# Drop this file into any repo at .github/workflows/pr-review.yml
+# Replace YOUR_USERNAME with your GitHub username or org.
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    uses: YOUR_USERNAME/pr-review/.github/workflows/pr-review.yml@main
+    secrets: inherit
