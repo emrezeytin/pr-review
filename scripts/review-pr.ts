@@ -342,7 +342,7 @@ async function runReview(
 
   try {
     await box.git.clone({
-      repo: `github.com/${pr.fullName}`,
+      repo: `https://github.com/${pr.fullName}.git`,
       branch: pr.head,
     });
 
