@@ -46,6 +46,7 @@ If the repos being reviewed live in a GitHub organization but `pr-review` lives 
 ### 3. Add to any repo
 
 Copy `caller-workflow.yml` into the target repo as `.github/workflows/pr-review.yml`.
+The reusable workflow reads secrets from the caller repository or org, not from this `pr-review` repo.
 
 ```bash
 # From the target repo
@@ -72,7 +73,9 @@ permissions:
 
 It must also pass `pr_url`, which the reusable workflow requires.
 
-For `pull_request` runs from forks, GitHub may still force a read-only token unless the organization/repository allows write tokens for fork PR workflows. In that case, a workflow that posts PR reviews cannot run with `pull-requests: write` on the plain `pull_request` event.
+The provided caller workflow uses `pull_request_target` instead of `pull_request`. This is required if you want secrets like `UPSTASH_BOX_API_KEY` to be available for forked PRs. GitHub does not pass repository secrets to workflows triggered by `pull_request` from forks.
+
+`secrets: inherit` only forwards secrets that the caller repo already has access to. If you see `Secret UPSTASH_BOX_API_KEY is required, but not provided while calling`, add the secret to the caller repo or make an org secret available to that repo.
 
 ## Cost controls
 
