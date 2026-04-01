@@ -62,6 +62,18 @@ To rerun the review manually on any PR, add a comment containing:
 
 To use a different trigger phrase, change the `contains(github.event.comment.body, '/review')` check in `caller-workflow.yml`.
 
+The caller workflow must grant the permissions required by the reusable workflow:
+
+```yml
+permissions:
+  contents: read
+  pull-requests: write
+```
+
+It must also pass `pr_url`, which the reusable workflow requires.
+
+For `pull_request` runs from forks, GitHub may still force a read-only token unless the organization/repository allows write tokens for fork PR workflows. In that case, a workflow that posts PR reviews cannot run with `pull-requests: write` on the plain `pull_request` event.
+
 ## Cost controls
 
 - **Sonnet, not Opus** — cheaper and fast enough for review
