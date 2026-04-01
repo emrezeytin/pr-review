@@ -75,7 +75,14 @@ It must also pass `pr_url`, which the reusable workflow requires.
 
 The provided caller workflow uses `pull_request_target` instead of `pull_request`. This is required if you want secrets like `UPSTASH_BOX_API_KEY` to be available for forked PRs. GitHub does not pass repository secrets to workflows triggered by `pull_request` from forks.
 
-`secrets: inherit` only forwards secrets that the caller repo already has access to. If you see `Secret UPSTASH_BOX_API_KEY is required, but not provided while calling`, add the secret to the caller repo or make an org secret available to that repo.
+Pass `UPSTASH_BOX_API_KEY` explicitly in the caller workflow:
+
+```yml
+secrets:
+  UPSTASH_BOX_API_KEY: ${{ secrets.UPSTASH_BOX_API_KEY }}
+```
+
+Do not use `secrets: inherit` for this setup. GitHub only supports `inherit` when the caller and called workflow are in the same organization or enterprise. If you see `Secret UPSTASH_BOX_API_KEY is required, but not provided while calling`, the caller repo either does not have that secret or the workflow is relying on `inherit` across an org/user boundary.
 
 ## Cost controls
 
