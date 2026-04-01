@@ -213,7 +213,7 @@ async function postReview(pr: PRInfo, result: ReviewResult): Promise<void> {
     }
   }
 
-  const event = result.verdict === "approved" ? "APPROVE" : "COMMENT";
+  const event = "COMMENT";
 
   await githubApi(`/repos/${pr.owner}/${pr.repo}/pulls/${pr.number}/reviews`, {
     method: "POST",
