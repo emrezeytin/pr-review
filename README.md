@@ -4,7 +4,7 @@ Automated AI code review using [Upstash Box](https://upstash.com/docs/box/overal
 
 ## How it works
 
-When a PR is opened or updated:
+When a PR is opened, updated, or manually retriggered with a comment:
 
 1. **Skip bots** — Dependabot, Renovate, github-actions are ignored
 2. **Skip drafts** — Draft PRs are not reviewed
@@ -14,7 +14,8 @@ When a PR is opened or updated:
    - `5–80 lines` → quick single-pass review (Sonnet, 2 min timeout)
    - `80–300 lines` → thorough single-agent review (Sonnet, 5 min timeout)
    - `300+ lines` → parallel multi-agent review: security + logic (Sonnet, 5 min each)
-5. **Post review** — Findings are posted as a GitHub PR review with severity icons
+5. **Manual retrigger** — Comment `/review` on the PR to run it again on demand
+6. **Post review** — Findings are posted as a GitHub PR review with severity icons
 
 ## Setup
 
@@ -23,11 +24,11 @@ When a PR is opened or updated:
 ```bash
 git clone <this-repo>
 cd pr-review
-# Replace YOUR_USERNAME in these files:
+# Replace emrezeytin in these files:
 #   .github/workflows/pr-review.yml
 #   caller-workflow.yml
-git remote set-url origin git@github.com:YOUR_USERNAME/pr-review.git
-git push -u origin main
+git remote set-url origin git@github.com:emrezeytin/pr-review.git
+git push -u origin master
 ```
 
 ### 2. Set org-level secret
@@ -40,16 +41,26 @@ Go to your GitHub org Settings → Secrets and variables → Actions → New org
 
 `GITHUB_TOKEN` is provided automatically by GitHub Actions.
 
+If the repos being reviewed live in a GitHub organization but `pr-review` lives in a personal account, the reusable workflow repo should be public. A private repo on a personal account is not a good fit for org-owned callers. The org also needs to allow public actions and reusable workflows.
+
 ### 3. Add to any repo
 
-Copy `caller-workflow.yml` into the target repo as `.github/workflows/pr-review.yml`. That's it — 11 lines.
+Copy `caller-workflow.yml` into the target repo as `.github/workflows/pr-review.yml`.
 
 ```bash
 # From the target repo
 mkdir -p .github/workflows
 curl -o .github/workflows/pr-review.yml \
-  https://raw.githubusercontent.com/YOUR_USERNAME/pr-review/main/caller-workflow.yml
+  https://raw.githubusercontent.com/emrezeytin/pr-review/master/caller-workflow.yml
 ```
+
+To rerun the review manually on any PR, add a comment containing:
+
+```text
+/review
+```
+
+To use a different trigger phrase, change the `contains(github.event.comment.body, '/review')` check in `caller-workflow.yml`.
 
 ## Cost controls
 
