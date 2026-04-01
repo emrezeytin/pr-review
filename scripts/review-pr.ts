@@ -1,4 +1,4 @@
-import { Box, ClaudeCode } from "@upstash/box";
+import { Agent, Box, BoxApiKey, ClaudeCode } from "@upstash/box";
 import { z } from "zod";
 
 // ── Env validation ──────────────────────────────────────────────────
@@ -231,7 +231,9 @@ async function createBox(): Promise<InstanceType<typeof Box>> {
       return await Box.create({
         runtime: "node",
         agent: {
-          model: ClaudeCode.Sonnet_4_6,
+          provider: Agent.ClaudeCode,
+          model: ClaudeCode.Sonnet_4_5,
+          apiKey: BoxApiKey.UpstashKey,
         },
         git: { token: ENV.githubToken },
       });
